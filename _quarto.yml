@@ -3,7 +3,7 @@ project:
   output-dir: docs
 
 website:
-  title: "BSC6926fall2024"
+  title: "BSC6926fall2025"
   navbar:
     left:
     - text: "Syllabus"
