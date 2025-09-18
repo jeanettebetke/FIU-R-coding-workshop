@@ -192,7 +192,7 @@ df_cars
 df_cars$data[1]
 
 df_cars = df_cars |> 
-      mutate(models = map(data, \(x) lm(mpg ~ wt, data = x)),
+      mutate(models = map(data, \(x) lm(mpg ~ wt, data = x)), #\ = function()
              summary = map(models, summary),
              r_sq = map_dbl(summary, \(x) x$r.squared))
 

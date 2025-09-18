@@ -77,8 +77,8 @@ list_example = list(a = seq(20,30, by = 5), b = c('a', 'b', 'c'), c = mtcars_df)
 
 #Calling a object within the list
 list_example$a #Element name a
-list_example[1] #Preserving - new list with only with first element
-list_example[[1]] #Simplifying - first element of list
+list_example[3] #Preserving - new list with only with first element
+list_example[[3]] #Simplifying - first element of list
 
 list_example$c
 list_example[3]
@@ -166,6 +166,7 @@ df = mtcars |>
   select(mpg, cyl, color)
 
 head(df)
+
 
 
 ## Renaming and making columns
