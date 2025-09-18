@@ -312,7 +312,7 @@
     "href": "ws3.html#quartormardown",
     "title": "Workshop 3: Introduction to R",
     "section": "Quarto/rmardown",
-    "text": "Quarto/rmardown\nThere are times when we want to inbed R into a document to make it easier to read. This can be done with quarto (.qmd) or rmarkdown (.rmd) files. These file types are more similar to word documents, have their own syntax, and can embed programming languages (not just R) into the document. These files can be output as html, pdf, or docx files. These are very flexible and can be used to make single documents, books, websites, and presentations. Resources about quarto and rmarkdown\nFor PDFs in Quarto and Rmarkdown. You will need to download some form of LaTex to write the PDFs. R recommends the following code\n\ninstall.packages('tinytex')\n\ntinytex::install_tinytex()"
+    "text": "Quarto/rmardown\nThere are times when we want to inbed R into a document to make it easier to read. This can be done with quarto (.qmd) or rmarkdown (.rmd) files. These file types are more similar to word documents, have their own syntax, and can embed programming languages (not just R) into the document. These files can be output as html, pdf, or docx files. These are very flexible and can be used to make single documents, books, websites, and presentations. Resources about quarto and rmarkdown\nFor PDFs in Quarto and Rmarkdown. You will need to download some form of LaTex to write the PDFs. R recommends the following code\nHere is a crash course and introduction video for getting started in quarto.\n\ninstall.packages('tinytex')\n\ntinytex::install_tinytex()"
   },
   {
     "objectID": "ws3.html#exercises",

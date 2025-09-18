@@ -294,6 +294,8 @@ For PDFs in [Quarto](https://quarto.org/docs/output-formats/pdf-basics.html) and
 You will need to download some form of LaTex to write the PDFs.
 R recommends the following code
 
+Here is a [crash course](https://youtu.be/oYV1a9sWhgM?si=UYwD1IhCst25bnCs) and [introduction](https://youtu.be/_f3latmOhew?si=hZvrVOD9dlTWEAL9) video for getting started in quarto.
+
 ```{r, eval = F}
 install.packages('tinytex')
 
