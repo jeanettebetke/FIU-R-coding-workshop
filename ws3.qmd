@@ -290,11 +290,12 @@ These files can be output as html, pdf, or docx files.
 These are very flexible and can be used to make single documents, books, websites, and presentations.
 Resources about [quarto](https://quarto.org/docs/reference/) and [rmarkdown](https://rmarkdown.rstudio.com/lesson-1.html)
 
+Here is a [crash course](https://youtu.be/oYV1a9sWhgM?si=UYwD1IhCst25bnCs) and [introduction](https://youtu.be/_f3latmOhew?si=hZvrVOD9dlTWEAL9) video for getting started in quarto.
+
 For PDFs in [Quarto](https://quarto.org/docs/output-formats/pdf-basics.html) and [Rmarkdown](https://bookdown.org/yihui/rmarkdown/pdf-document.html).
 You will need to download some form of LaTex to write the PDFs.
 R recommends the following code
 
-Here is a [crash course](https://youtu.be/oYV1a9sWhgM?si=UYwD1IhCst25bnCs) and [introduction](https://youtu.be/_f3latmOhew?si=hZvrVOD9dlTWEAL9) video for getting started in quarto.
 
 ```{r, eval = F}
 install.packages('tinytex')
