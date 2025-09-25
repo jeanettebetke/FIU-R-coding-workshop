@@ -1,22 +1,31 @@
-#' """ Workshop 5: Density dependent models
-#'     @author: BSC 6926 B52
-#'     date: 9/25/25"""
+---
+title: "Workshop 5: Density dependent models"
+author: "BSC 6926 B52"
+date: "9/25/25"
+format: 
+  html:
+    toc: true
+    theme: yeti
+---
 
-#This workshop cover density dependent population growth models. In these set of models, 
-#the change in population size between time points is influenced by the number of 
-#individuals in the population. This script will give examples of how to 
-#model discrete density dependent population growth models.  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = T, cache = T)
+```
+
+This workshop cover density dependent population growth models. In these set of models, the change in population size between time points is influenced by the number of individuals in the population. This script will give examples of how to model discrete density dependent population growth models.
+
+R script: [github](https://github.com/SeascapeEcologyLab-workshops/BSC6926-B52_Fall2025/blob/main/workshopScripts/workshop5.R)
+
+[R script of workshop 5](workshopScripts/workshop5.R)
+
 
 ## Discrete density dependent growth models
 
-# The basic formula for the discrete density dependent growth model is represented by 
-# $$N_{t+1} = N_t + r_dN_t(1-(N_t/K))$$
+The basic formula for the discrete density dependent growth model is represented by $$N_{t+1} = N_t + r_dN_t(1-(N_t/K))$$ where $N_t$ is the population size at time $t$, $K$ is the carrying capacity of the population, and $r_d$ is the discrete growth factor. It is important to know that $r_d = \lambda -1$.\
 
-#   where $N_t$ is the population size at time $t$, $K$ is the carrying capacity of the population, and $r_d$ is the discrete growth factor. 
-#   It is important to know that 
-# $r_d = \lambda -1$. \
+We can use a `for` loop to calculate discrete density dependent growth
 
-# We can use a `for` loop to calculate discrete density dependent growth 
+```{r}
 library(tidyverse)
 
 N_0 = 10 #Starting population size
@@ -35,26 +44,35 @@ for(i in 2:length(pop$time)){
 }
 pop
 
+```
+
+```{r}
 ggplot(pop, aes(time, Nt))+
   geom_line(linewidth = 1) +
   labs(x = 'Time', y = expression(italic(N[t])))+
   theme_bw()
+  
+```
 
-#Since we have many arguments, it might make sense for us to use a custom function for this model. 
+Since we have many arguments, it might make sense for us to use a custom function for this model.
 
 ## Custom functions
-#So far we have used functions that are apart of base R or from different packages, 
-#but we can also build custom functions. Custom functions are useful when existing functions will not do the task at hand, 
-#or when combining functions over multiple times. These can be used for vector operations.
 
-#The basic structure is 
-# function_name = function(arguments){
-#   code_here
-#   return(output)
-# }
+So far we have used functions that are apart of base R or from different packages, but we can also build custom functions. Custom functions are useful when existing functions will not do the task at hand, or when combining functions over multiple times. These can be used for vector operations.
 
-# The `arguments` can be empty and therefore required, or set equal to a value. If set to a value, the default is that value, but a new value can be indicated that will override the default value.
+The basic structure is
 
+```{r eval =F}
+function_name = function(arguments){
+  code_here
+  return(output)
+}
+
+```
+
+The `arguments` can be empty and therefore required, or set equal to a value. If set to a value, the default is that value, but a new value can be indicated that will override the default value.
+
+```{r}
 # custom funciton 
 my_fx = function(x){
   b = x * 23
@@ -77,8 +95,7 @@ my_fx2(4)
 my_fx2(4, 5)
 my_fx2(4,5)
 
-
-# custom function with true false
+# custom fucntion with true false
 
 my_fx3 = function(x = T){ 
   if (x == T){
@@ -103,10 +120,14 @@ mi_km = function(mi){
 mtcars %>%
   mutate(kmpg = mi_km(mpg))
 
+```
+
 ## Function for density dependent growth
-#Using a custom function we can create a function for density dependent population growth.\
-#*Note that it is similar to above but instead of * $N_{t-1}$ *to calculate* $N_t$ *we are using* $N_t$ *to calculate* $N_{t+1}$
-  
+
+Using a custom function we can create a function for density dependent population growth.\
+*Note that it is similar to above but instead of* $N_{t-1}$ *to calculate* $N_t$ *we are using* $N_t$ *to calculate* $N_{t+1}$
+
+```{r}
 dlogisticD = function(K, rd, N_0, years) {
   logis = tibble(Nt = NA, time = 0:years)
   logis$Nt[logis$time == 0] = N_0
@@ -120,8 +141,11 @@ dlogisticD = function(K, rd, N_0, years) {
 dfx = dlogisticD(K = 900, rd = 1.2, N_0 = 10, years = 50) 
 
 dfx
+```
 
-#We can compare the output of the function to the output of the for loop.
+We can compare the output of the function to the output of the for loop.
+
+```{r}
 library(ggpubr)
 
 a = ggplot(pop, aes(x = time, y = Nt)) +
@@ -142,19 +166,23 @@ b = ggplot(dfx, aes(x = time, y = Nt)) +
 # plot combined
 ggarrange(a,b,
           nrow = 1)
-## Relation between growth rate and density
-# Based on the above population curves, we can see that population growth ($\Delta N_t$) starts out small when both $t$ and $N_t$ are small, 
-# accelerates as $N_t$ grows, and then over time, slows down and reaches an asymptote of $K$.
-# 
-# Using `mutate()` we can calculate the population growth increment ($\Delta N_t$) and the per capita growth ($\Delta N_t/N_t$). 
-# The population growth is the $r_dN_t(1-N_t/K)$ of the equation.
+```
 
+## Relation between growth rate and density
+
+Based on the above population curves, we can see that population growth ($\Delta N_t$) starts out small when both $t$ and $N_t$ are small, accelerates as $N_t$ grows, and then over time, slows down and reaches an asymptote of $K$.
+
+Using `mutate()` we can calculate the population growth ($\Delta N_t$) and the per capita growth ($\Delta N_t/N_t$). The population growth is the $r_dN_t(1-N_t/K)$ of the equation.
+
+```{r}
 pop.1 = pop %>%
   mutate(lambda = lead(Nt) / Nt, pop.growth = (rd*Nt)*(1 - Nt/K),
          per.capita = pop.growth / Nt)
 
 pop.1
+```
 
+```{r}
 #Surplus/Production/Population growth
 surplus = ggplot(pop.1, aes(Nt, pop.growth)) + 
   geom_line(color = "red") +
@@ -175,12 +203,15 @@ per.capita = ggplot(pop.1, aes(Nt, per.capita)) +
 
 ggarrange(surplus, per.capita,
           nrow = 1)
+```
 
 ## Effect of $N_0$
-# Here we can see how the $N_0$ affects the output of the model.
-# 
-# We can do so using a nested `for` loop. 
 
+Here we can see how the $N_0$ affects the output of the model.
+
+We can do so using a nested `for` loop.
+
+```{r}
 # set initial parameters
 years = 20
 rd = 1
@@ -207,8 +238,11 @@ for(j in 1:length(N0s)){
 }
 popAll
 
-#This can also be done by using an `if` statement in the `for` loop.
+```
 
+This can also be done by using an `if` statement in the `for` loop.
+
+```{r}
 # set up tibble to store data
 pop3= tibble(time = rep(0:years, times = length(N0s)),
              Nt = NA, N0 = rep(N0s, each = years + 1))
@@ -220,8 +254,11 @@ for(i in 1:length(pop3$time)){
     pop3$Nt[i] = pop3$Nt[i - 1]  + rd*pop3$Nt[i - 1]*(1 - pop3$Nt[i - 1] / K)}
 }
 pop3
+```
 
-#Plot results
+Plot results
+
+```{r}
 ggplot(popAll, aes(time, Nt, color = as.factor(N0))) +
   geom_line(linewidth = 1)+
   labs(y = expression(italic(N[t])),
@@ -230,12 +267,15 @@ ggplot(popAll, aes(time, Nt, color = as.factor(N0))) +
   theme_bw()+
   theme(legend.position = 'bottom',
         legend.text = element_text(size = 8))
+```
 
+Why Overshooting $K$?
 
-  
 ## Effect of $r_d$
-# Now let's see how changing $r_d$ changes the model output
 
+Now let's see how changing $r_d$ changes the model output
+
+```{r}
 # initial conditions
 years = 50
 rds = c(1.3, 1.6, 1.9, 2.2, 2.5, 2.8) 
@@ -253,8 +293,11 @@ for(i in 1:length(pop4$time)){
   pop4$Nt[i] = pop4$Nt[i - 1]  + pop4$rd[i]*pop4$Nt[i - 1]*(1 - pop4$Nt[i - 1] / K)}
 }
 pop4
+```
 
-#Plot the results 
+Plot the results
+
+```{r}
 ggplot(pop4, aes(time, Nt, color = as.factor(rd))) +
   geom_line(size = 1)+
   labs(y = expression(italic(N[t])),
@@ -264,20 +307,22 @@ ggplot(pop4, aes(time, Nt, color = as.factor(rd))) +
   theme_bw()+
   theme(legend.position = 'bottom',
         legend.text = element_text(size = 8))
+```
 
-# Why Overshooting $K$?
+$r_d$ = 1.6-1.9 : dampened oscillation\
+$r_d$ = 2 - 2.5 : stable two-point cycles\
+$r_d$ = 2.5 - 2.6 : stable four-point cycles or more\
+$r_d$ > 2.6 : variable cycles around K through time = Chaos\
+Chaos - non random, complex, and non repeating cycles sensitive to initial conditions
 
-#rd 1.6-1.9 = dampened oscillation 
-#rd 2 - 2.5 = stable two-point cycles
-#rd > 2.5 - 2.6 = stable four-point cycles or more
-#rd > 2.6 = variable cycles around K through time = Chaos
-#Chaos = no random, complex, and non repeating cycles sensitive to initial conditions
+## Exercises
 
-# ## Exercises
-# 1) Using the sparrows dataset from the primer package (i.e., install and load "primer" package), plot the population size over time. Calculate the average $\lambda$ (hint: you will need to use the geometric mean) for the sparrow population.
-# 
-# 2) Project the population over the next 50 years for the sparrow population using the average $\lambda$ from exercise 1. For now use the mean sparrow count for $K$, and use the minimum sparrow count as $N_0$. Plot the results. 
-# 
-# 3) Did it reach $K$? If not, how many years does it take based on your $r_d$? Plot the results.
-# 
-# 4) Challenge: Simulate/Project the sparrow based on different $K$ = 25, 30, 40, 50. Plot the results. 
+1)  Using the sparrows dataset from the primer package, plot the population size over time. Calculate the average $\lambda$ (hint: you will need to use the geometric mean) for the sparrow population.
+
+2)  Project the population over the next 50 years for the sparrow population using the average $\lambda$ from exercise 1. For now use the mean sparrow count for $K$, and use the minimum sparrow count as $N_0$. Plot the results.
+
+3)  Did it reach $K$? If not, how many years does it take based on your $r_d$? Plot the results.
+
+4)  Challenge: Simulate/Project the sparrow based on different $K$ = 25, 30, 40, 50. Plot the results.
+
+[Exercise Solutions](solutions/Key_ws5.html)\
