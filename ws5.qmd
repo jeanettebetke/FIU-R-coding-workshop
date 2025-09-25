@@ -117,7 +117,7 @@ mi_km = function(mi){
   return(km)
 }
 
-mtcars %>%
+mtcars |>
   mutate(kmpg = mi_km(mpg))
 
 ```
@@ -175,7 +175,7 @@ Based on the above population curves, we can see that population growth ($\Delta
 Using `mutate()` we can calculate the population growth ($\Delta N_t$) and the per capita growth ($\Delta N_t/N_t$). The population growth is the $r_dN_t(1-N_t/K)$ of the equation.
 
 ```{r}
-pop.1 = pop %>%
+pop.1 = pop |>
   mutate(lambda = lead(Nt) / Nt, pop.growth = (rd*Nt)*(1 - Nt/K),
          per.capita = pop.growth / Nt)
 
@@ -231,9 +231,9 @@ for(j in 1:length(N0s)){
   }
   # combine 
   if(j == 1){
-    popAll <- popJ 
+    popAll = popJ 
   }else{
-    popAll <- bind_rows(popAll, popJ)
+    popAll = bind_rows(popAll, popJ)
   }
 }
 popAll
@@ -273,37 +273,44 @@ Why Overshooting $K$?
 
 ## Effect of $r_d$
 
-Now let's see how changing $r_d$ changes the model output
+Now let's see how changing $r_d$ changes the model output using the custom function we created above and `map()`
 
 ```{r}
-# initial conditions
-years = 50
-rds = c(1.3, 1.6, 1.9, 2.2, 2.5, 2.8) 
-K = 900
-N_0 = 100
-
-# set up tibble to store data
-pop4= tibble(time = rep(0:years, times = length(rds)),
-               Nt = NA, rd = rep(rds, each = years + 1))
-# set N_0 
-pop4$Nt[pop4$time == 0] = N_0
-
-for(i in 1:length(pop4$time)){
-  if(pop4$time[i] != 0){
-  pop4$Nt[i] = pop4$Nt[i - 1]  + pop4$rd[i]*pop4$Nt[i - 1]*(1 - pop4$Nt[i - 1] / K)}
+# custom function 
+dlogisticD = function(K, rd, N_0, years) {
+  logis = tibble(Nt = NA, time = 0:years)
+  logis$Nt[logis$time == 0] = N_0
+  
+  for(i in 1:(length(logis$time)-1)){
+    logis$Nt[i+1] = logis$Nt[i]  + rd*logis$Nt[i]*(1 - logis$Nt[i] / K)
+  }
+  return(logis)
 }
+
+
+# use map and custom function using same initial conditions
+pop4 = tibble(rds = c(1.3, 1.6, 1.9, 2.2, 2.5, 2.8)) |> 
+  mutate(pop = map(rds, \(rd) dlogisticD(K = 900, rd = rd, N_0 = 100, years = 50)))
+
+pop4
+
+pop4$pop[[1]]
+
+pop4 = pop4 |> 
+  unnest(pop)
+
 pop4
 ```
 
 Plot the results
 
 ```{r}
-ggplot(pop4, aes(time, Nt, color = as.factor(rd))) +
-  geom_line(size = 1)+
+ggplot(pop4, aes(time, Nt, color = as.factor(rds))) +
+  geom_line(linewidth = 1)+
   labs(y = expression(italic(N[t])),
        x = 'Time',
        color = expression(italic(r[d])))+
-  facet_wrap(~rd, nrow = 2)+
+  facet_wrap(~rds, nrow = 2)+
   theme_bw()+
   theme(legend.position = 'bottom',
         legend.text = element_text(size = 8))
