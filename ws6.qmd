@@ -1,0 +1,1053 @@
+---
+title: "Workshop 6: Demographic matrix models"
+author: "BSC 6926 B52"
+date: "2025-10-02"
+format:
+  html:
+    toc: true
+    toc-location: right   # or right
+    theme: yeti
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = T, cache = T)
+```
+
+This workshop covers population demographic models.\
+
+R script: [github](https://github.com/SeascapeEcologyLab-workshops/BSC6926-B52_Fall2024/blob/main/workshopScripts/workshop6.R)
+
+[R script of workshop 6](workshopScripts/workshop6.R)
+
+
+## Matrix projection models
+When modeling populations, not are life stages are equal. There can be drastic differences in survival or reproductive output depending on the life stage. Therefore, it is important to consider the demography when modeling the population. This can be done with matrices to model structured populations. These models use a transition (also called projection) matrix ($A$) that represents mathematically all of the stages and transitions between stages in the population. The population at time $N_{t+1}$ can be found with the following formula that takes advantage of matrix multiplication: $$N_{t+1} = AN_t$$
+
+
+
+## Matrices in R
+Another data structure that is useful in ecological uses of R are matrices. A matrix is made with the `matrix()` function with the basic syntax `matrix(data = , nrow = , ncol = , byrow = , dimnames = )`. 
+
+  `data =` the input vector which becomes the data elements of the matrix.
+
+  `nrow =` the number of rows to be created.
+
+  `ncol =` the number of columns to be created.
+
+  `byrow = FALSE` if `TRUE` then the input vector elements are arranged by row.
+
+  `dimname =` the names assigned to the rows and columns.
+  
+```{r}
+# make a matrix using nrow
+m1 = matrix(c(1,2,3,4,5,6), nrow = 2)
+m1 
+
+# make a matrix using ncol
+m2 = matrix(c(1,2,3,4,5,6), ncol = 2)
+m2 
+
+# make a matrix using nrow and by row
+m3 = matrix(c(1,2,3,4,5,6), ncol = 2, byrow = T)
+m3
+
+```
+
+### Indexing
+Matrices can be indexed in 2 ways
+
+```{r}
+# make a matrix using ncol
+m2 = matrix(c(1,2,3,4,5,6), ncol = 2)
+m2 
+
+m2[1,2]
+m2[4]
+# make a matrix using nrow and by row
+m3 = matrix(c(1,2,3,4,5,6), ncol = 2, byrow = T)
+m3
+
+m3[1,2]
+m3[4]
+
+```
+
+### Matrix algebra
+Matrix algebra can be done on matrices. There are specific matrix opperation like `%*%`, and  functions like `sum()`,`mean()`, `rowSums()`, `colSums()`, `rowMeans()`, and `colMeans()` can be used to sum up entire matrices or specific rows or columns. 
+
+```{r}
+
+m2 = matrix(c(1,2,3,4,5,6), ncol = 3)
+m2 
+
+m2 + 1 
+m2/3
+
+m3 = matrix(c(1,2,3,4,5,6), ncol = 3, byrow = T)
+m3
+
+m2 + m3 
+m3 - m2
+
+# multply matrix with vector
+v = c(1,2,3)
+
+m2*v
+
+# matrix multiplication 
+m4 = matrix(c(1,2,3), ncol = 1)
+m2 %*% m4
+
+# functions with matrices
+m2
+sum(m2)
+mean(m2)
+rowSums(m2)
+rowMeans(m2)
+colSums(m2)
+colMeans(m2)
+
+```
+
+### Random sampling of matrices
+```{r}
+# sample matrices from list 
+m1 = matrix(c(4,3,2,1), ncol = 2)
+m2 = matrix(c(1,2,3,4), ncol = 2)
+m3 = matrix(c(1,2,3,4), ncol = 2, byrow = T)
+
+m = list(m1, m2, m3)
+
+sample(m, size = 4, replace = T)
+
+sample(m, size = 4, replace = T, prob = c(0.8, 0.1, 0.1))
+```
+
+## 2 stage matrix model
+The transition matrix ($A$) represents the growth, survival, and fecundity of each life stage. Here we use a simple two stage demographic model for a population with a distinct juvenile and adult stage (this can also represent seed and adult plant). The transition matrix can be represented as $$ A = \begin{bmatrix}
+p_{11}&F_{12} \\
+p_{21}&p_{22} \\
+\end{bmatrix}$$
+where from time $t$ to $t + 1$  
+ - $p_{11}$ is the probability juveniles survives and stays as a juvenile\
+ - $p_{21}$ is the probability juveniles survives and transitions to an adult\
+ - $p_{22}$ is the probability adults survives\
+ - $F_{12}$ is contribution of adults to juveniles (e.g. reproduction)\
+ 
+```{r}
+# setting up initial conditions 
+p11 = 0
+p21 = 0.2
+p22 = 0.8
+F12 = 1.5
+
+# set up transition matrix 
+A = matrix(c(p11, F12, p21, p22), byrow = T, ncol = 2)
+A
+
+# initial population conditions
+juv = 50
+ad = 100
+
+#matrix of populations
+p = matrix(c(juv, ad), ncol = 1)
+p
+
+```
+ 
+We can use `for` loops to simulate population dynamics 
+```{r}
+library(tidyverse)
+# set conditions
+years = 50
+
+# place to store data
+pop = tibble(time = 0:years,
+             Nt = NA, 
+             juvs = NA,
+             adults = NA)
+
+pop$Nt[pop$time == 0] = sum(p)
+pop$juvs[pop$time == 0] = p[1]
+pop$adults[pop$time == 0] = p[2]
+
+pop
+
+for(i in 1:years){
+  p = A %*% p
+  pop$Nt[pop$time == i] = sum(p)
+  pop$juvs[pop$time == i] = p[1]
+  pop$adults[pop$time == i] = p[2]
+}
+
+df = pop %>% 
+  pivot_longer(Nt:adults, names_to = 'stage', values_to = 'n') %>% 
+  mutate(stage = factor(stage, levels = c('Nt','juvs','adults')))
+
+ggplot(df, aes(time, n, color = stage)) +
+  geom_point() +
+  geom_line(linewidth = 1) +
+  labs(x = 'Time', y = 'Population size', color = 'Stage') +
+  scale_color_manual(values = c('black', 'red', 'blue'))+
+  theme_bw()
+```
+
+## `popbio`
+The package [`popbio`](https://www.jstatsoft.org/article/view/v022i11) was developed for estimating and analyzing demographic models. This package can be useful as these models become more complex with more life stages.
+
+### Constructing transition and fertility matrices (from popbio package info: Stubben & Brook. 2007. J Stats Soft)
+The data are derived from a census - i.e., track fate of marked individuals and reproduction output. There are four main steps. It is recommended to use a long format to organized and structure your census data.
+
+#### Step 1 - Create a stage-fate data frame
+```{r}
+library(popbio)
+data("test.census")
+
+trans = full_join(test.census, test.census, by = 'plant', 
+                  relationship = "many-to-many") |> 
+  filter(year.x == year.y -1) |> 
+  rename(year = year.x, stage = stage.x, fruits = fruits.x,
+         year2 = year.y, fate = stage.y, fruits2 = fruits.y)
+
+trans
+
+```
+
+#### Step 2 - Adding fertility using relative values (blind/anynymous reproduction)
+```{r}
+seedlings = test.census |> 
+  filter(year == 2002, stage == 'seedling') |> 
+  nrow()
+
+seedlings
+
+trans01 = trans |>  
+  filter(year == 2001) |> 
+  select(plant, stage, fruits, fate) |> 
+  mutate(seedling = fruits/sum(fruits)*seedlings)
+
+trans01
+```
+
+#### Step 3 - Creating projection matrix A = T + F
+```{r}
+#Using popbio to construct projection matrix from transition and fertility matrices
+stages = c("seedling", "vegetative", "reproductive")
+
+projection.matrix(trans01, sort = stages)
+
+trans01 = trans01 |> 
+  mutate(stage = ordered(stage, levels = stages))
+
+projection.matrix(trans01, TF = TRUE)
+```
+
+#### Step 4 - Adding other information not included in the census
+```{r}
+data('aq.trans')
+
+#subset for 1996
+aq96 = aq.trans |> 
+  filter(year == 1996) |>  
+  select(plot, plant,stage, fate, fruits)
+
+# measured metrics
+seed.survival = 0.126
+seed.bank.size = 10000
+seeds.per.fruit = 120
+
+#calculate metrics
+recruits = test.census |> 
+  filter(year == 1997, stage == 'recruits') |> 
+  nrow()
+
+seeds.from.plants = sum(aq96$fruits) * seeds.per.fruit
+
+recruitment.rate = recruits/(seed.bank.size + seeds.from.plants)
+
+#calculate recruits and seeds 
+aq96 = aq96 |> 
+  mutate(recruit = fruits/sum(fruits) * seeds.from.plants * recruitment.rate,
+         seed = fruits * seeds.per.fruit * seed.survival)
+aq96
+# matrix 
+projection.matrix(aq96, add = c(1, 1, seed.survival,2, 1, recruitment.rate))
+```
+
+### `pop.projection()`
+`popbio::pop.projection()` can be used to project population change and returns list of information about the model. \
+- `lambda` - estimate of lambda using change between the last two population counts\
+- `stable.stage` - estimate of stable stage distribution using proportions in last stage vector\
+- `stage.vector` - A matrix with the number of projected individuals in each stage class\
+- `pop.sizes` - total number of projected individuals \
+- `pop.changes` - proportional change in populations size \
+
+For more information about calculating $\lambda$ and stable stage you can refer to [Chapter 4 of Steven's Primer of Ecology using R](https://hankstevens.github.io/Primer-of-Ecology/DID.html) or Chapter 3 of Gotelli's A primer of Ecology. 
+
+```{r}
+stages = c("seedling", "vegetative", "flowering")
+
+# create projection matrix
+A = matrix(c(0, 0, 5.905, 0.368, 0.639, 0.025, 0.001, 0.152, 0.051), 
+           nrow = 3, byrow = TRUE, dimnames = list(stages, stages))
+
+# Initial vector of population sizes across stages
+n = c(5, 5, 5)
+
+# run model
+p = pop.projection(A = A, n = n, iterations = 15)
+p
+
+stage.vector.plot(p$stage.vectors)
+```
+
+Plot using ggplot
+```{r}
+pp = tibble(time = as.numeric(colnames(p$stage.vectors)),
+            seedling = p$stage.vectors[1,],
+            vegetative = p$stage.vectors[2,],
+            flowering = p$stage.vectors[3,],
+            total = p$pop.sizes) %>% 
+  pivot_longer(seedling:total, names_to = 'stage', values_to = 'n') %>% 
+  mutate(stage = factor(stage, 
+                        levels =c('total','seedling','vegetative','flowering')))
+
+ggplot(pp, aes(time, n, color = stage)) +
+  geom_point() +
+  geom_line(size = 1) +
+  labs(x = 'Time', y = 'Population size', color = 'Stage') +
+  scale_color_manual(values = c('black', 'brown', 'green', 'pink'))+
+  theme_bw()
+
+```
+
+### population variability and stochastic growth
+The `stoch.projection()` function came be used to project stochastic growth using whole matrix selection techniques in an independently and identically distributed (iid) environment from a set of two or more projection matrices. Returns a matrix listing final population sizes by stage class. 
+
+```{r}
+#install.packages(popdemo)
+library(popdemo)
+
+data("hudsonia")
+hudsonia
+
+# starting population size
+n = c(4264, 3, 30, 16, 25, 5)
+names(n) = c("seed", "seedlings", "tiny", "small", "medium","large")
+
+# projection with equal probabilities 
+x.eq = stoch.projection(matrices = hudsonia, n0 = n, nreps = 100) %>% 
+  as_tibble() %>% 
+  mutate(rep = row_number(),
+         total = seed + seedlings + tiny + small + medium + large,
+         type = 'equal')
+
+x.eq
+
+# unequal probabilities for projection matrices
+x.uneq = stoch.projection(matrices = hudsonia, n0 = n, nreps = 100, prob = c(0.2, 0.2, 0.2, 0.4))%>% 
+  as_tibble() %>% 
+  mutate(rep = row_number(),
+         total = seed + seedlings + tiny + small + medium + large,
+         type = 'unequal')
+
+x.uneq
+
+pop2 = bind_rows(x.eq,x.uneq)
+
+ggplot(pop2, aes(total, fill = type)) +
+  geom_density(alpha = 0.5) +
+  labs(x = 'Ending population size', color = NULL) +
+  theme_bw()
+
+```
+
+## Exercises 
+1. Create a transition matrix for a 2 stage population where the the probability of stage 1 survival and stays in stage 1 = 0, the probability of survival of stage 1 and transition to stage 2 = 0.1, the survival of stage 2 = 0.8, and contribution of stage 2 to stage 1 = 2. 
+
+2. Use the transition matrix from exercise 1 to simulate 50 years of a population with a starting population of 50 individuals in stage 1 and 25 individuals in stage 2. Plot the results. 
+
+3. _Challenge_: Using the 3 matrices below. Simulate the same population above. Use a probability of 0.5 for average year, 0.3 for poor year, and 0.2 for good year. Plot your results\
+$$ average = \begin{bmatrix}
+0&2 \\
+0.1&0.8 
+\end{bmatrix}$$
+$$
+poor = \begin{bmatrix}
+0&1 \\
+0.1&0.6
+\end{bmatrix}$$
+
+$$ 
+good = \begin{bmatrix}
+0&3 \\
+0.1&0.8
+\end{bmatrix}$$
+
+[Exercise Solutions](solutions/Key_ws6.html)\
+
+# Introduction to IPMs
+
+This page will show you the basics of what goes in to making an Integral Projection Model (IPM). This is not a full tutorial on IPMs, but rather a quick overview of the components that go into building one.
+
+For our example we are using data collected in Culebra, Puerto Rico between 2021 and 2023. At each year we surveyed coral colonies of *Porites astroides* for size, survival, and recruitment.
+
+In early 2022 a major *Diadema antillarum* (black spiny urchin) die-off event occurred that led to increases in macro-algae at all of our sites.
+
+We will use an IPM to see how this disturbance event affected population growth rate (lambda, λ) by comparing the first transition (2021 - 2022) and the second transition (2022 - 2023).
+
+# Building the Kernels
+
+$$
+\LARGE K(z', z) = P(z', z) + F(z', z)
+$$
+
+$\LARGE K(z', z)$ represents the K kernel, which is the sum of the P and F kernels.
+
+$z$ is the size of an individual at the first timepoint
+
+$z'$ is the size of the same individual at the second timepoint
+
+$P(z', z)$ is the growth kernel which represents growth and survival
+
+$F(z', z)$ is the fecundity kernel which represents reproduction and recruitment
+
+Together we can use these kernels to build an Integral Projection Model (IPM) to project population dynamics over time and include covariates like disturbance events to see how they affect population growth rate (lambda, λ).
+
+## P Kernel
+
+The P Kernel represents survival and growth of existing individuals. In thise individual kernels you will see $\tau$ which represents the term "transition" meaning
+
+transition 1 - survey of coral conditions before the die-off event
+
+transition 2 - survey of coral conditions after the die-off event
+
+$$
+\LARGE P(z', z) = s(z, \tau) \times g(z' \mid z, \tau)
+$$
+## Load libraries and datasets
+[model df](https://github.com/SeascapeEcologyLab-workshops/BSC6926-B52_Fall2025/blob/main/data/df_models.csv)
+
+[time 2 data](https://github.com/SeascapeEcologyLab-workshops/BSC6926-B52_Fall2025/blob/main/data/dat_processedt2.csv)
+
+[time 1 data](https://github.com/SeascapeEcologyLab-workshops/BSC6926-B52_Fall2025/blob/main/data/dat_processed.csv)
+
+```{r load libraries}
+
+library(tidyverse)
+library(ipmr)
+library(performance)
+library(truncnorm)
+library(glmmTMB)
+library(gridExtra)
+library(ggeffects)
+library(ggpubr)
+library(stringr)
+library(ggrepel)
+library(MuMIn)
+
+df = read_csv("data/df_models.csv") 
+dat_processedt2 = read_csv("data/dat_processedt2.csv")
+dat_processed = read_csv("data/dat_processed.csv")
+
+```
+
+
+## Growth
+
+$$
+\LARGE g(z' \mid z, \tau)
+$$
+
+```{r}
+#| echo: TRUE
+#| include: TRUE
+
+g_global = lm(log_size_next ~ log_size * transition, data = df)
+
+plot(ggpredict(g_global, terms = c("log_size", "transition")))
+```
+
+## Survival
+
+$$
+\LARGE s(z, \tau) 
+$$
+
+```{r survival model global}
+#| echo: TRUE
+#| include: TRUE
+
+s_global  <- glm(survival ~ log_size * transition, family = binomial, data = df)
+
+plot(ggpredict(s_global, terms = c("log_size[all]", "transition")))
+
+```
+
+# F Kernel
+
+## Probability of Reproduction
+
+```{r reproduction model global}
+#| echo: TRUE
+#| include: TRUE
+
+
+r_global = glm(repro ~ log_size, family = binomial, data = df)
+
+plot(ggpredict(r_global, terms = c("log_size[all]")))
+
+```
+
+### Amount of Recruits Produced
+
+```{r seed model global}
+#| echo: TRUE
+#| include: TRUE
+
+
+
+seed_global <- glmmTMB(totaloocytes ~ log_size + transition,
+                         family = nbinom2, data = df)
+
+
+plot(ggpredict(seed_global, terms = c("log_size[all]", "transition")))
+
+
+
+```
+
+## Recruit Size Distribution
+
+```{r other}
+#| echo: TRUE
+#| include: TRUE
+
+recr_data <- subset(df, action == "born" & area2 < 5 & transition == "t1")
+
+recr_mu  <- mean(recr_data$log_size_next)
+recr_sd  <- sd(recr_data$log_size_next)
+
+grow_sd  <- sd(resid(g_global))
+
+recr_datat2 <- subset(dat_processedt2, action == "born" & area2 < 5)
+
+recr_mut2  <- mean(recr_datat2$log_size_next)
+recr_sdt2  <- sd(recr_datat2$log_size_next)
+
+```
+
+# Parameters
+
+```{r parameters global}
+#| echo: TRUE
+#| include: TRUE
+params_global1 <- list(
+  grow_mod   = use_vr_model(g_global),      # lm with log_size * transition
+  surv_mod   = s_global,      # glm with log_size * transition
+  repr_mod   = r_global,      # glm binomial with log_size * transition
+  seed_mod   = use_vr_model(seed_global),      # glm.nb with log_size * transition
+  grow_sd    = grow_sd,
+  recr_mu    = recr_mu,
+  recr_sd    = recr_sd,
+  transition = "t1"
+)
+
+params_global2 <- list(
+  grow_mod   = use_vr_model(g_global),      # lm with log_size * transition
+  surv_mod   = s_global,      # glm with log_size * transition
+  repr_mod   = r_global,      # glm binomial with log_size * transition
+  seed_mod   = use_vr_model(seed_global),      # glm.nb with log_size * transition
+  grow_sd    = grow_sd,
+  recr_mu    = recr_mut2,
+  recr_sd    = recr_sdt2,
+  transition = "t2"
+)
+
+```
+
+# Building the IPM
+
+## Before Dieoff
+
+```{r global ipm}
+#| echo: TRUE
+#| include: TRUE
+
+L <- 1.2 * min(df$log_size, df$log_size_next, na.rm = TRUE)
+U <- 1.2 * max(df$log_size, df$log_size_next, na.rm = TRUE)
+
+ipm_global1 <- init_ipm(sim_gen = "simple", di_dd = "di", det_stoch = "det") %>%
+  
+  # --- P Kernel (Survival * Growth) ---
+  define_kernel(
+    name    = "P",
+    family  = "CC",
+    formula = s * g,
+    
+    s = predict(surv_mod,
+                newdata = data.frame(
+                  log_size   = sa_1 ,
+                  transition = rep(transition, length(sa_1))
+                ),
+                type = "response"),
+    
+    g_mu = predict(grow_mod,
+                   newdata = data.frame(
+                     log_size   = sa_1,
+                  transition = rep(transition, length(sa_1))
+                   ),
+                   type = "response"),
+    
+    g = dnorm(sa_2,g_mu, grow_sd),
+    
+    states        = list(c("sa")),
+    data_list     = params_global1,
+    uses_par_sets  = FALSE,
+    evict_cor     = TRUE,
+    evict_fun     = truncated_distributions(fun = "norm",
+                                            target = "g")
+  ) %>%
+  
+  define_kernel(
+    name    = "F",
+    family  = "CC",
+    formula = f_r * f_s * f_d,
+    
+    f_r = predict(repr_mod,
+                  newdata = data.frame(
+                    log_size   = sa_1),
+                  type = "response"),
+    
+    f_s = predict(seed_mod,
+                  newdata = data.frame(
+                    log_size   = sa_1,
+                    transition = rep(transition, length(sa_1))
+                  ),
+                  type = "response"),
+    
+    f_d = dnorm(sa_2, recr_mu, recr_sd),
+    
+    
+    states        = list(c("sa")),
+    data_list     = params_global1,
+    uses_par_sets  = FALSE,
+    evict_cor     = TRUE,
+    evict_fun     = truncated_distributions(fun = "norm",
+                                            target = "f_d")
+  ) %>%
+  define_impl(
+    make_impl_args_list(
+      kernel_names = c("P", "F"),
+      int_rule     = rep('midpoint', 2),
+      state_start    = rep("sa", 2),
+      state_end      = rep("sa", 2)
+    )
+  ) %>%
+  define_domains(
+    sa = c(L,
+           U,
+           200)
+  ) %>%
+  define_pop_state(n_sa = runif(200)) %>%
+  make_ipm(iterate = TRUE,
+           iterations = 1000)
+```
+
+## After Dieoff
+
+```{r global t2}
+#| echo: TRUE
+#| include: TRUE
+
+ipm_global2 <- init_ipm(sim_gen = "simple", di_dd = "di", det_stoch = "det") %>%
+  
+  # --- P Kernel (Survival * Growth) ---
+  define_kernel(
+    name    = "P",
+    family  = "CC",
+    formula = s * g,
+    
+    s = predict(surv_mod,
+                newdata = data.frame(
+                  log_size   = sa_1 ,
+                  transition = rep(transition, length(sa_1))
+                ),
+                type = "response"),
+    
+    g_mu = predict(grow_mod,
+                   newdata = data.frame(
+                     log_size   = sa_1,
+                  transition = rep(transition, length(sa_1))
+                   ),
+                   type = "response"),
+    
+    g = dnorm(sa_2,g_mu, grow_sd),
+    
+    states        = list(c("sa")),
+    data_list     = params_global2,
+    uses_par_sets  = FALSE,
+    evict_cor     = TRUE,
+    evict_fun     = truncated_distributions(fun = "norm",
+                                            target = "g")
+  ) %>%
+  
+  define_kernel(
+    name    = "F",
+    family  = "CC",
+    formula = f_r * f_s * f_d,
+    
+    f_r = predict(repr_mod,
+                  newdata = data.frame(
+                    log_size   = sa_1,
+                    transition = rep(transition, length(sa_1))
+                  ),
+                  type = "response"),
+    
+    f_s = predict(seed_mod,
+                  newdata = data.frame(
+                    log_size   = sa_1,
+                    transition = rep(transition, length(sa_1))
+                  ),
+                  type = "response"),
+    
+    f_d = dnorm(sa_2, recr_mu, recr_sd),
+    
+    
+    states        = list(c("sa")),
+    data_list     = params_global2,
+    uses_par_sets  = FALSE,
+    evict_cor     = TRUE,
+    evict_fun     = truncated_distributions(fun = "norm",
+                                            target = "f_d")
+  ) %>%
+  define_impl(
+    make_impl_args_list(
+      kernel_names = c("P", "F"),
+      int_rule     = rep('midpoint', 2),
+      state_start    = rep("sa", 2),
+      state_end      = rep("sa", 2)
+    )
+  ) %>%
+  define_domains(
+    sa = c(L,
+           U,
+           200)
+  ) %>%
+  define_pop_state(n_sa = runif(200)) %>%
+  make_ipm(iterate = TRUE,
+           iterations = 1000)
+
+```
+
+# Population Growth Rate
+
+**Before Dieoff**
+
+```{r}
+#| echo: FALSE
+#| include: TRUE
+
+lambda(ipm_global1)
+
+```
+
+**After Dieoff**
+
+```{r}
+#| echo: FALSE
+#| include: TRUE
+
+lambda(ipm_global2)
+
+```
+
+# Including Covariates
+
+
+[rugosity data](https://github.com/SeascapeEcologyLab-workshops/BSC6926-B52_Fall2025/blob/main/data/snapper_abundance_r.csv)
+```{r rugosity data}
+
+rugo = read_csv("data/snapper_abundance_r.csv") |> 
+  dplyr::select(-SitePlot, -Site, -Plot, -Common, -MaxN) |> 
+   mutate(
+    num = str_remove(SitePlotNew, "^[A-Z]"),
+    Site = str_sub(num, 1, 2),
+    Plot = str_sub(num, 3, 4))  |> 
+  dplyr::select(-num) |> 
+  rename_with(tolower) |> 
+  mutate(site = as.numeric(site),
+         plot = as.numeric(plot),
+         location = case_when(
+           location == "M" ~ "Maguey",
+           location == "T" ~ "Tampico",
+           TRUE ~ location
+         ),
+         transition = "t1")
+
+df2 = left_join(df, rugo, by = c("transition","location","site", "plot")) 
+
+df2 = df2 |> 
+  filter(transition == "t1")
+```
+
+## Models with Rugosity
+
+```{r}
+#| echo: TRUE
+#| include: TRUE
+
+g_global_rugo4 = glmmTMB(log_size_next ~ log_size + avg_rugosity * rugosity_variance, family = gaussian(), data = df2)
+
+
+s_global_rugo1  <- glm(survival ~ log_size, family = binomial, data = df2)
+
+
+r_global  <- glm(repro ~ log_size, family = binomial, data = df2)
+
+
+seed_t1 <- glmmTMB(totaloocytes ~ log_size, family = nbinom2, data = df2)
+
+recr_data <- subset(df2, action == "born" & area2 < 5)
+
+recr_mu  <- mean(recr_data$log_size_next)
+recr_sd  <- sd(recr_data$log_size_next)
+
+recr_n   <- 760
+
+grow_sd  <- sd(resid(g_global_rugo4))
+
+```
+
+## Parameters with Rugosity
+
+```{r parameters with rugosity}
+#| echo: TRUE
+#| include: TRUE
+
+params_global1 <- list(
+  grow_mod   = use_vr_model(g_global_rugo4),      # lm with log_size * transition
+  surv_mod   = s_global_rugo1,      # glm with log_size * transition
+  repr_mod   = r_global,      # glm binomial with log_size * transition
+  seed_mod   = use_vr_model(seed_t1),      # glm.nb with log_size * transition
+ grow_sd    = grow_sd,
+  recr_mu    = recr_mu,
+  recr_sd    = recr_sd,
+  avg_rugosity = 3,
+  rugosity_variance = 4)
+
+```
+
+## IPM with Rugosity
+
+```{r ipm with rugosity}
+#| echo: TRUE
+#| include: TRUE
+L <- min(c(dat_processed$log_size, dat_processed$log_size_next), na.rm = TRUE) * 1.2
+U <- max(c(dat_processed$log_size, dat_processed$log_size_next), na.rm = TRUE) * 1.2
+
+
+
+ipm_global3 <- init_ipm(sim_gen = "simple", di_dd = "di", det_stoch = "det") %>%
+  
+  # --- P Kernel (Survival * Growth) ---
+  define_kernel(
+    name    = "P",
+    family  = "CC",
+    formula = s * g,
+    
+    s = predict(surv_mod,
+                newdata = data.frame(
+                  log_size   = sa_1                ),
+                type = "response"),
+    
+    g_mu = predict(grow_mod,
+                   newdata = data.frame(
+                     log_size   = sa_1,
+                  avg_rugosity = rep(avg_rugosity, length(sa_1)),
+                  rugosity_variance = rep(rugosity_variance, length(sa_1))
+                   ),
+                   type = "response"),
+    
+    g = dnorm(sa_2,g_mu, grow_sd),
+    
+    states        = list(c("sa")),
+    data_list     = params_global1,
+    uses_par_sets  = FALSE,
+    evict_cor     = TRUE,
+    evict_fun     = truncated_distributions(fun = "norm",
+                                            target = "g")
+  ) %>%
+  
+  define_kernel(
+    name    = "F",
+    family  = "CC",
+    formula = f_r * f_s * f_d,
+    
+    f_r = predict(repr_mod,
+                  newdata = data.frame(
+                    log_size   = sa_1                  ),
+                  type = "response"),
+    
+    f_s = predict(seed_mod,
+                  newdata = data.frame(
+                    log_size   = sa_1                  ),
+                  type = "response"),
+    
+    f_d = dnorm(sa_2, recr_mu, recr_sd),
+    
+    
+    states        = list(c("sa")),
+    data_list     = params_global1,
+    uses_par_sets  = FALSE,
+    evict_cor     = TRUE,
+    evict_fun     = truncated_distributions(fun = "norm",
+                                            target = "f_d")
+  ) %>%
+  define_impl(
+    make_impl_args_list(
+      kernel_names = c("P", "F"),
+      int_rule     = rep('midpoint', 2),
+      state_start    = rep("sa", 2),
+      state_end      = rep("sa", 2)
+    )
+  ) %>%
+  define_domains(
+    sa = c(L,
+           U,
+           100)
+  ) %>%
+  define_pop_state(n_sa = runif(100)) %>%
+  make_ipm(iterate = TRUE,
+           iterations = 1000)
+```
+
+## Results
+
+**Lambda with rugosity included in model**
+
+```{r}
+#| echo: FALSE
+#| include: TRUE
+lambda(ipm_global3)
+```
+
+```{r run ipm with rugosity}
+#| echo: FALSE
+#| include: FALSE
+
+run_ipm_lambda <- function(avg_rugosity, rugosity_variance, params_base, L, U) {
+  params_global1 <- params_base
+  params_global1$avg_rugosity <- avg_rugosity
+  params_global1$rugosity_variance <- rugosity_variance
+
+
+  ipm_tmp <- init_ipm(sim_gen = "simple", di_dd = "di", det_stoch = "det") %>%
+    # --------- P (Survival × Growth) ----------
+    define_kernel(
+      name    = "P",
+      family  = "CC",
+      formula = s * g,
+
+      s = predict(
+        surv_mod,
+        newdata = data.frame(log_size = sa_1),  # surv uses only log_size
+        type = "response"
+      ),
+
+      g_mu = predict(
+        grow_mod,
+        newdata = data.frame(
+          log_size           = sa_1,
+          avg_rugosity       = rep(avg_rugosity,      length(sa_1)),
+          rugosity_variance  = rep(rugosity_variance, length(sa_1))
+        ),
+        type = "response"
+      ),
+
+      g = dnorm(sa_2, g_mu, grow_sd),
+
+      states        = list(c("sa")),
+      data_list     = params_global1,
+      uses_par_sets = FALSE,
+      evict_cor     = TRUE,
+      evict_fun     = truncated_distributions(fun = "norm", target = "g")
+    ) %>%
+    # --------- F (Fecundity) ----------
+    define_kernel(
+      name    = "F",
+      family  = "CC",
+      formula = f_r * f_s * f_d,
+
+      f_r = predict(
+        repr_mod,
+        newdata = data.frame(log_size = sa_1),  # repr uses only log_size
+        type = "response"
+      ),
+
+      f_s = predict(
+        seed_mod,
+        newdata = data.frame(log_size = sa_1),  # seed uses only log_size
+        type = "response"
+      ),
+
+      f_d = dnorm(sa_2, recr_mu, recr_sd),
+
+      states        = list(c("sa")),
+      data_list     = params_global1,
+      uses_par_sets = FALSE,
+      evict_cor     = TRUE,
+      evict_fun     = truncated_distributions(fun = "norm", target = "f_d")
+    ) %>%
+    define_impl(
+      make_impl_args_list(
+        kernel_names = c("P","F"),
+        int_rule     = c("midpoint","midpoint"),
+        state_start  = c("sa","sa"),
+        state_end    = c("sa","sa")
+      )
+    ) %>%
+    define_domains(sa = c(L, U, 100)) %>%
+    define_pop_state(n_sa = runif(100)) %>%
+    make_ipm(iterate = TRUE, iterations = 1000)
+
+  as.numeric(lambda(ipm_tmp))
+}
+grid <- expand.grid(
+  avg_rugosity      = seq(1, 2, by = 0.2),
+  rugosity_variance = seq(0, .25, by = 0.03))
+
+results <- grid
+results$lambda <- NA_real_
+
+for (i in seq_len(nrow(results))) {
+  results$lambda[i] <- run_ipm_lambda(
+    avg_rugosity      = results$avg_rugosity[i],
+    rugosity_variance = results$rugosity_variance[i],
+    params_base = params_global1,
+    L = L, U = U
+  )
+}
+
+```
+
+\*\*Lambda with Different rugosity values
+
+```{r plot rugosity results}
+#| echo: FALSE
+#| include: TRUE
+
+ ggplot(results, aes(avg_rugosity, rugosity_variance, fill = lambda)) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  labs(x = "Avg rugosity", y = "Rugosity variance", fill = expression(lambda)) +
+  theme_minimal(base_size = 16)+
+  theme(
+    text = element_text(face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(face = "bold"),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(face = "bold")
+  )
+ 
+```

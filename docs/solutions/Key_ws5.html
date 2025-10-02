@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>key_ws2 – BSC6926fall2025</title>
+<title>key_ws5 – BSC6926fall2025</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -103,6 +103,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -174,10 +203,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<section id="key-for-workshop-2-exercises" class="level2">
-<h2 class="anchored" data-anchor-id="key-for-workshop-2-exercises">Key for workshop 2 exercises</h2>
+<section id="key-for-workshop-5-exercises" class="level2">
+<h2 class="anchored" data-anchor-id="key-for-workshop-5-exercises">Key for workshop 5 exercises</h2>
 <ol type="1">
-<li>Read in the LDWFBayAnchovy2007.csv and create a column that calculates the catch per unit effort (CPUE) for Bay anchovy within the dataframe.</li>
+<li>Using the sparrows dataset from the primer package, plot the population size over time. Calculate the average <span class="math inline">\(\lambda\)</span> (hint: you will need to use the geometric mean) for the sparrow population.</li>
 </ol>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
@@ -191,79 +220,119 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="do">## ✖ dplyr::filter() masks stats::filter()</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="do">## ✖ dplyr::lag()    masks stats::lag()</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="do">## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># LDWFBayAnchovy2007 is on the workshop github. Download and save in targeted working directory</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">#Uploading file</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>fish_LA <span class="ot">=</span> <span class="fu">read_csv</span>(<span class="st">"data/LDWFBayAnchovy2007.csv"</span>)</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="do">## Rows: 60 Columns: 5</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="do">## ── Column specification ────────────────────────────────────────────────────────</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="do">## Delimiter: ","</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="do">## chr  (2): species, basin</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="do">## dbl  (2): num, seines</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="do">## date (1): date</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="do">## ℹ Use `spec()` to retrieve the full column specification for this data.</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="do">## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating new column for CPUE = Catch per unit effort (Catch/effort)</span></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>fish_LA <span class="ot">=</span> fish_LA <span class="sc">|&gt;</span> </span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">CPUE =</span> num<span class="sc">/</span>seines)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<ol start="2" type="1">
-<li>Create a dataframe or tibble that contains the basin names for the LDWFBayAnchovy2007.csv dataset (Barataria, Terrebonne, Ponchartrain, Vermilion-Teche, and Calcasieu) and the and abbreviation for each basin as a new column. ::: {.cell}</li>
-</ol>
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Version 1 - Manual entry</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>basins <span class="ot">=</span> <span class="fu">tibble</span>(<span class="at">basin =</span> <span class="fu">c</span>(<span class="st">"Barataria"</span>, <span class="st">"Calcasieu"</span>, <span class="st">"Pontchartrain"</span>, <span class="st">"Terrebonne"</span>, <span class="st">"Vermilion-Teche"</span>),</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                    <span class="at">basin_short =</span> <span class="fu">c</span>(<span class="st">"Bar"</span>, <span class="st">"Cal"</span>, <span class="st">"Pon"</span>, <span class="st">"Terr"</span>, <span class="st">"Ver"</span>))</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#Version 2 - Wrangling and using the original data with R base and tidyr functions</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>basins <span class="ot">=</span> <span class="fu">tibble</span>(<span class="at">basin =</span> <span class="fu">c</span>(<span class="fu">unique</span>(fish_LA<span class="sc">$</span>basin)),</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                <span class="at">basin_short =</span> <span class="fu">c</span>(<span class="fu">abbreviate</span>(<span class="fu">unique</span>(fish_LA<span class="sc">$</span>basin))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>:::</p>
-<ol start="3" type="1">
-<li>Merge the dataframe/tibbles from exercises 1 and 2. ::: {.cell}</li>
-</ol>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>fish_LA <span class="ot">=</span> fish_LA <span class="sc">|&gt;</span> </span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(basins, <span class="at">by =</span><span class="st">"basin"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>:::</p>
-<ol start="4" type="1">
-<li>Plot the CPUE for each basin both over time and as a summary of the entire year using a different color for each basin.</li>
-</ol>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CPUE over time</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>CPUE_ts <span class="ot">=</span> <span class="fu">ggplot</span>(fish_LA, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> num, <span class="at">color =</span> basin_short))<span class="sc">+</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>()<span class="sc">+</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_date</span>(<span class="at">limits =</span> <span class="fu">c</span>(lubridate<span class="sc">::</span><span class="fu">ymd</span>(<span class="st">'2007-01-01'</span>), lubridate<span class="sc">::</span><span class="fu">ymd</span>(<span class="st">'2007-12-01'</span>)))<span class="sc">+</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">'Date'</span>, <span class="at">y =</span> <span class="st">'Bay anchovy CPUE'</span>)<span class="sc">+</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()<span class="sc">+</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>),</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">'bottom'</span>,</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.title =</span> <span class="fu">element_blank</span>())</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>YR_summary <span class="ot">=</span> <span class="fu">ggplot</span>(fish_LA, <span class="fu">aes</span>(<span class="at">x =</span> basin, <span class="at">y =</span> CPUE, <span class="at">fill =</span> basin_short))<span class="sc">+</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">'# of seines'</span>, <span class="at">fill =</span> <span class="st">"Basins"</span>)<span class="sc">+</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggpubr)</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co"># plot combined</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>final_fig_ex2 <span class="ot">=</span> <span class="fu">ggarrange</span>(CPUE_ts, YR_summary,</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>          <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">'a)'</span>,<span class="st">'b)'</span>),</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>          <span class="at">ncol =</span> <span class="dv">1</span>)</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>final_fig_ex2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(primer)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="do">## Loading required package: deSolve</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DescTools)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">'sparrows'</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span>sparrows, <span class="fu">aes</span>(<span class="at">x=</span>Year, <span class="at">y=</span>Count)) <span class="sc">+</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> </span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Key_ws2_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Key_ws5_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#A good function to save figures for pubs</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">#ggsave("final_fig_ex2.pdf", width = 7, height = 7, unit = "in", dpi = 300)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> sparrows <span class="sc">|&gt;</span>  </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">lambda =</span> <span class="fu">lead</span>(Count)<span class="sc">/</span>Count) <span class="sc">|&gt;</span> </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">Gmean</span>(lambda, <span class="at">na.rm =</span> T),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">sd =</span> <span class="fu">Gsd</span>(lambda, <span class="at">na.rm =</span> T))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ol start="2" type="1">
+<li>Project the population over the next 50 years for the sparrow population using the average <span class="math inline">\(\lambda\)</span> from exercise 1. For now use the mean sparrow count for <span class="math inline">\(K\)</span>, and use the minimum sparrow count as <span class="math inline">\(N_0\)</span>. Plot the results.</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>lambda <span class="ot">=</span> df<span class="sc">$</span>mean</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>rd <span class="ot">=</span> lambda <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>K <span class="ot">=</span> <span class="fu">mean</span>(sparrows<span class="sc">$</span>Count)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>N0 <span class="ot">=</span> <span class="fu">min</span>(sparrows<span class="sc">$</span>Count)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>years <span class="ot">=</span> <span class="dv">50</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>pop <span class="ot">=</span> <span class="fu">tibble</span>(<span class="at">time =</span> <span class="dv">0</span><span class="sc">:</span>years, <span class="at">Nt =</span> <span class="cn">NA</span>) </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>pop<span class="sc">$</span>Nt[pop<span class="sc">$</span>time <span class="sc">==</span> <span class="dv">0</span>] <span class="ot">=</span> N0</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># for loop</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span><span class="fu">length</span>(pop<span class="sc">$</span>time)){</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  pop<span class="sc">$</span>Nt[i] <span class="ot">=</span> pop<span class="sc">$</span>Nt[i <span class="sc">-</span> <span class="dv">1</span>]  <span class="sc">+</span> rd<span class="sc">*</span>pop<span class="sc">$</span>Nt[i <span class="sc">-</span> <span class="dv">1</span>]<span class="sc">*</span>(<span class="dv">1</span> <span class="sc">-</span> pop<span class="sc">$</span>Nt[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">/</span> K)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span>pop, <span class="fu">aes</span>(<span class="at">x=</span>time, <span class="at">y=</span>Nt)) <span class="sc">+</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> </span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Key_ws5_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<ol start="3" type="1">
+<li>Did it reach <span class="math inline">\(K\)</span>? If not, how many years does it take based on your <span class="math inline">\(r_d\)</span>? Plot the results.</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>lambda <span class="ot">=</span> df<span class="sc">$</span>mean</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>rd <span class="ot">=</span> lambda <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>K <span class="ot">=</span> <span class="fu">mean</span>(sparrows<span class="sc">$</span>Count)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>N0 <span class="ot">=</span> <span class="fu">min</span>(sparrows<span class="sc">$</span>Count)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>years <span class="ot">=</span> <span class="dv">10000</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>pop <span class="ot">=</span> <span class="fu">tibble</span>(<span class="at">time =</span> <span class="dv">0</span><span class="sc">:</span>years, <span class="at">Nt =</span> <span class="cn">NA</span>) </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>pop<span class="sc">$</span>Nt[pop<span class="sc">$</span>time <span class="sc">==</span> <span class="dv">0</span>] <span class="ot">=</span> N0</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># for loop</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span><span class="fu">length</span>(pop<span class="sc">$</span>time)){</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  pop<span class="sc">$</span>Nt[i] <span class="ot">=</span> pop<span class="sc">$</span>Nt[i <span class="sc">-</span> <span class="dv">1</span>]  <span class="sc">+</span> rd<span class="sc">*</span>pop<span class="sc">$</span>Nt[i <span class="sc">-</span> <span class="dv">1</span>]<span class="sc">*</span>(<span class="dv">1</span> <span class="sc">-</span> pop<span class="sc">$</span>Nt[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">/</span> K)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span>pop, <span class="fu">aes</span>(<span class="at">x=</span>time, <span class="at">y=</span>Nt)) <span class="sc">+</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> </span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Key_ws5_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<ol start="4" type="1">
+<li>Challenge: Simulate/Project the sparrow based on different <span class="math inline">\(K\)</span> = 25, 30, 40, 50. Plot the results.</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>lambda <span class="ot">=</span> df<span class="sc">$</span>mean</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>rd <span class="ot">=</span> lambda <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>K <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">25</span>,<span class="dv">30</span>,<span class="dv">40</span>,<span class="dv">50</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>N0 <span class="ot">=</span> <span class="fu">min</span>(sparrows<span class="sc">$</span>Count)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>years <span class="ot">=</span> <span class="dv">500</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>pop <span class="ot">=</span> <span class="fu">tibble</span>(<span class="at">time =</span> <span class="fu">rep</span>(<span class="dv">0</span><span class="sc">:</span>years, <span class="at">times =</span> <span class="fu">length</span>(K)), <span class="at">Nt =</span> <span class="cn">NA</span>, <span class="at">K =</span> <span class="fu">rep</span>(K, <span class="at">each =</span> years<span class="sc">+</span><span class="dv">1</span>)) </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>pop<span class="sc">$</span>Nt[pop<span class="sc">$</span>time <span class="sc">==</span> <span class="dv">0</span>] <span class="ot">=</span> N0</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># for loop</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(pop)){</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(pop<span class="sc">$</span>time[i] <span class="sc">&gt;</span> <span class="dv">0</span>){</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    pop<span class="sc">$</span>Nt[i] <span class="ot">=</span> pop<span class="sc">$</span>Nt[i <span class="sc">-</span> <span class="dv">1</span>]  <span class="sc">+</span> rd<span class="sc">*</span>pop<span class="sc">$</span>Nt[i <span class="sc">-</span> <span class="dv">1</span>]<span class="sc">*</span>(<span class="dv">1</span> <span class="sc">-</span> pop<span class="sc">$</span>Nt[i <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">/</span> pop<span class="sc">$</span>K[i])</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span>pop, <span class="fu">aes</span>(<span class="at">x=</span>time, <span class="at">y=</span>Nt, <span class="at">color =</span> <span class="fu">as.factor</span>(K))) <span class="sc">+</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> </span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Key_ws5_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
 </div>
 
 

@@ -2,10 +2,10 @@
 title: "Workshop 4: Density independent models"
 author: "BSC 6926 B52"
 date: "9/17/2025"
-output: 
-  html_document:
+format:
+  html:
     toc: true
-    toc_float: true
+    toc-location: right   # or right
     theme: yeti
 ---
 

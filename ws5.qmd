@@ -2,9 +2,10 @@
 title: "Workshop 5: Density dependent models"
 author: "BSC 6926 B52"
 date: "9/25/25"
-format: 
+format:
   html:
     toc: true
+    toc-location: right   # or right
     theme: yeti
 ---
 

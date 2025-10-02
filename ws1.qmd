@@ -2,9 +2,10 @@
 title: "Workshop 1: Intro to R"
 author: "BSC 6926 B52"
 date: "8/28/2025"
-format: 
+format:
   html:
     toc: true
+    toc-location: right   # or right
     theme: yeti
 ---
 
