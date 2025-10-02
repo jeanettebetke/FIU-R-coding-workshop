@@ -1,6 +1,6 @@
 # title: "Workshop 6: Demographic matrix models"
 # author: "BSC 6926 B52"
-# date: "10/19/2024"
+# date: "10/2/25"
 
 
 # This workshop covers population demographic models.\
@@ -289,7 +289,7 @@ pp = tibble(time = as.numeric(colnames(p$stage.vectors)),
 
 ggplot(pp, aes(time, n, color = stage)) +
   geom_point() +
-  geom_line(size = 1) +
+  geom_line(linewidth = 1) +
   labs(x = 'Time', y = 'Population size', color = 'Stage') +
   scale_color_manual(values = c('black', 'brown', 'green', 'pink'))+
   theme_bw()

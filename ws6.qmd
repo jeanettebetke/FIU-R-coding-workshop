@@ -314,7 +314,7 @@ pp = tibble(time = as.numeric(colnames(p$stage.vectors)),
 
 ggplot(pp, aes(time, n, color = stage)) +
   geom_point() +
-  geom_line(size = 1) +
+  geom_line(linewidth = 1) +
   labs(x = 'Time', y = 'Population size', color = 'Stage') +
   scale_color_manual(values = c('black', 'brown', 'green', 'pink'))+
   theme_bw()
