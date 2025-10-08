@@ -1,13 +1,32 @@
-#' """ Workshop 7: Community data: diversity metrics
-#'     @author: BSC 6926 B52
-#'     date: 10/8/25"""
+---
+title: "Workshop 7: Community data: diversity metrics"
+author: "BSC 6926 B52"
+date: "10/8/2025"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: yeti
+---
 
-library(tidyverse)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = T, cache = T)
+```
+
+This workshop discusses working with community data.\
+
+R script: [github](https://github.com/SeascapeEcologyLab-workshops/BSC6926-B52_Fall2025/blob/main/workshopScripts/workshop7.R)
+
+[R script of workshop 7](workshopScripts/workshop7.R)
+
+[data](https://github.com/SeascapeEcologyLab-workshops/BSC6926-B52_Fall2025/blob/main/data/Calcasieu.csv)
+
 
 ## Community Data
-#Community data can vary in format, but typically involves abundance, biomass, or CPUE data for multiple species collected in each sample. Data can be stored in wide (species ID for each column) or long format. When examining community data, the first step is usually data exploration which can be done by calculating summary statistics or plotting.
+Community data can vary in format, but typically involves abundance, biomass, or CPUE data for multiple species collected in each sample. Data can be stored in wide (species ID for each column) or long format. When examining community data, the first step is usually data exploration which can be done by calculating summary statistics or plotting.
 
-
+```{r}
+library(tidyverse)
 
 # data in wide format
 marsh_w = read_csv('data/Calcasieu.csv') |> 
@@ -23,9 +42,11 @@ marsh_l = marsh_w |>
                values_to = "Count") 
 
 marsh_l
+```
 
-# calculate summary statistics
+### Calculate summary statistics
 
+```{r}
 marsh_ss = marsh_l |> 
   group_by(site) |> 
   summarise(mean_count = mean(Count, na.rm = TRUE),
@@ -33,10 +54,11 @@ marsh_ss = marsh_l |>
             total = sum(Count, na.rm = TRUE)) 
 
 marsh_ss
-
+```
 
 ### Plot density of Abundance
 
+```{r}
 ggplot(marsh_l, aes(x = Count, fill = site))+
   geom_density(alpha=0.4) +
   geom_vline(data=marsh_ss, aes(xintercept=mean_count, color=site),
@@ -50,11 +72,11 @@ ggplot(marsh_l, aes(x = Count, fill = site))+
              linetype="dashed", linewidth = 1) +
   scale_x_log10()+
   theme_bw()
-
+```
 
 ### Violin plot of abundance
 
-
+```{r}
 ggplot(marsh_l, aes(x = site, y = Count, fill = site))+
   geom_violin(alpha=0.4) +
   stat_summary(fun.data=mean_sdl, mult=1, 
@@ -63,9 +85,11 @@ ggplot(marsh_l, aes(x = site, y = Count, fill = site))+
   theme_bw()
 
 
+```
 
 ## Summarize and plot by species
 
+```{r}
 marsh_summary2 = marsh_l |> 
   group_by(site, Species) |> 
   summarise(mean_count = mean(Count, na.rm = TRUE),
@@ -85,13 +109,16 @@ ggplot(marsh_summary2 |> filter(total > 1000), aes(x = Species, y = mean_count, 
   labs(y = 'Mean Count', x = 'Species', fill = 'site')+
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+```
+
 
 ## Diversity metrics
-#Community data due to its multidimensionality is difficulty to interpret. Researchers have developed different indices and metrics to provide information about the biodiversity of the community data.
+Community data due to its multidimensionality is difficulty to interpret. Researchers have developed different indices and metrics to provide information about the biodiversity of the community data.
 
 ## Species Richness
-#Species richness ($S$) is the total number of species. 
+Species richness ($S$) is the total number of species. 
 
+```{r}
 marsh_l |> 
   group_by(site, month) |> 
   filter(Count > 0) |> 
@@ -100,12 +127,14 @@ marsh_l |>
   group_by(site) |> 
   summarise(mean_richness = mean(richness, na.rm = TRUE),
             sd_richness = sd(richness, na.rm = TRUE))
+```
 
 ## Shannon 
-# The Shannon diversity index ($H'$) is a diversity metric that accounts for species proportions and is calculated with the following formula: 
-# $$H' = -\sum_{i=1}^S p_i \log(p_i)$$
-#   where $p_i$ is the proportion of species $i$. The higher the value of $H'$, the higher the diversity of species in a particular community. The lower the value of H, the lower the diversity. A value of $H'$ = 0 indicates a community that only has one species.
+The Shannon diversity index ($H'$) is a diversity metric that accounts for species proportions and is calculated with the following formula: 
+$$H' = -\sum_{i=1}^S p_i \log(p_i)$$
+where $p_i$ is the proportion of species $i$. The higher the value of $H'$, the higher the diversity of species in a particular community. The lower the value of H, the lower the diversity. A value of $H'$ = 0 indicates a community that only has one species.
 
+```{r}
 # for loop
 df = unique(marsh_l[c("site","month")])
 df$H = NA
@@ -151,11 +180,13 @@ marsh_l |>
   group_by(site) |> 
   summarise(mean_H = mean(H, na.rm = TRUE),
             sd_H = sd(H, na.rm = TRUE))
+```
 
 ## Simpson
-# Another popular set of indices are Simpson's indices. The Simpson index calculated is a dominance metric and is calculated
-# $$D = \sum_{i=1}^S p_i^2$$ It ranges between 0 and 1 with high values indicating that abundance is made up of a few species. Its counter part $1 - D$ is an evenness index. The inverse $1/D$ is an indication of the richness in a community with uniform evenness that would have the same level of diversity.
+Another popular set of indices are Simpson's indices. The Simpson index calculated is a dominance metric and is calculated
+$$D = \sum_{i=1}^S p_i^2$$ It ranges between 0 and 1 with high values indicating that abundance is made up of a few species. Its counter part $1 - D$ is an evenness index. The inverse $1/D$ is an indication of the richness in a community with uniform evenness that would have the same level of diversity.
 
+```{r}
 # for loop
 df$D = NA
 df
@@ -196,10 +227,11 @@ marsh_l |>
             inverse_s = 1/s_dominance) |> 
   group_by(site) |> 
   summarize(across(s_dominance:s_evenness, list(mean = mean, sd = sd)))
+```
 
 ## Species accumulation curves
-# Also called rarefaction curve, plots the number of species as a function of the number of samples.
-# add unique ID for each sampling event
+Also called rarefaction curve, plots the number of species as a function of the number of samples.
+```{r}
 marsh_l = marsh_l |> 
   group_by(site, date) |> 
   mutate(sample_ID = cur_group_id()) |> 
@@ -257,9 +289,11 @@ ggplot(sac, aes(n_samp, n_spp, color = site))+
        color = 'site')+
   theme_bw()
 
+```
+
 ### Iterate and use based on random samples
 
-
+```{r}
 # curve for site 15
 m15 = marsh_l |> 
   filter(site == '15')
@@ -304,10 +338,12 @@ ggplot(avg, aes(n_samp, m_spp))+
        color = 'site')+
   theme_bw()
 
+```
 
 ## Dominance curves / Whittaker curves
-#Dominance as a function of species rank
+Dominance as a function of species rank
 
+```{r}
 df = marsh_l |> 
     group_by(site) |> 
     filter(Count > 0) |> 
@@ -320,16 +356,18 @@ df = marsh_l |>
     ungroup()
 
 ggplot(df, aes(rank, p_i, color = site))+
-  geom_line(size = 1)+
+  geom_line(linewidth = 1)+
   labs(x = 'Species rank',
        y = 'Dominance',
        color = 'site')+
   theme_bw()
+```
 
 ## K-dominance curves
-# Cumulative dominance by species rank
+Cumulative dominance by species rank
 
 
+```{r}
 df = marsh_l |> 
     group_by(site) |> 
     filter(Count > 0) |> 
@@ -344,15 +382,17 @@ df = marsh_l |>
   mutate(cumsum = cumsum(p_i))
 
 ggplot(df, aes(rank, cumsum, color = site))+
-  geom_line(size = 1)+
+  geom_line(linewidth = 1)+
   labs(x = 'Species rank',
        y = 'Cumulative Dominance',
        color = 'site')+
   theme_bw()
 
-# ## Exercises 
-# 1. Using the Calcasieu seine dataset, calculate the species richness for each month at each month and plot over the year. 
-# 
-# 2. Calculate the average Shannon and Simpson indeces for the fall (Sep-Nov) and Spring (March-May) for site 30. 
-# 
-# 3. _Challenge_: Calculate the average species accumulation curve for site 16 and site 28. Plot your results.
+```
+
+## Exercises 
+1. Using the Calcasieu seine dataset, calculate the species richness for each month at each month and plot over the year. 
+
+2. Calculate the average Shannon and Simpson indeces for the fall (Sep-Nov) and Spring (March-May) for site 30. 
+
+3. _Challenge_: Calculate the average species accumulation curve for site 16 and site 28. Plot your results.
