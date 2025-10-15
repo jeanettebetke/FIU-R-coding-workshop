@@ -2,10 +2,10 @@
 title: "Workshop 8: Community data: vegan and multivariate methods"
 author: "BSC 6926 B52"
 date: "10/15/25"
-output: 
-  html_document:
+format:
+  html:
     toc: true
-    toc_float: true
+    toc-location: right   # or right
     theme: yeti
 ---
 
