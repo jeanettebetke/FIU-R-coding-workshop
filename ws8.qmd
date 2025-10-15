@@ -242,13 +242,8 @@ ggplot(nmds_output, aes(MDS1, MDS2, color = as.factor(site)))+
 ```
 
 ## Diversity partitioning 
-Analysis of species replacement (turnover) and richness differences (or nestedness) based on Podani or Baselga Family Indices. From Chapter 8 - Numerical Ecology with R
 
 ```{r}
-library(adespatial)
-
-beta.div.comp(marsh_comm, coef = "BJ")
-
 marsh_spp.2 = marsh_l |>
   mutate(PA = if_else(Count > 0, 1, 0)) |> 
   group_by(site, Species) |> 
