@@ -1,6 +1,6 @@
 #' """ Workshop 8: Community data: vegan and multivariate methods
 #'     @author: BSC 6926 B52
-#'     date: 11/12/2024"""
+#'     date: 10/15/25"""
 
 library(tidyverse)
 
