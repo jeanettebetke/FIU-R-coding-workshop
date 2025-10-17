@@ -29,9 +29,9 @@ website:
     # - text: 'WS 9'
     #   href: ws9.qmd
     # 
-    # right:
-    # - text: 'HW'
-    #   href: hw1.qmd
+    right:
+    - text: 'HW'
+      href: HW.qmd
 
 format:
   html:
