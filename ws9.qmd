@@ -14,7 +14,7 @@ knitr::opts_chunk$set(collapse = T, cache = T)
 
 This workshop discusses working with community data by conducting trajectory analyses and introducing the package `ecotraj`.\
 
-R script: [github](https://github.com/BSC6926-B52-Fall2025/workshopScripts/blob/main/workshop9.R)
+R script: [github](https://github.com/SeascapeEcologyLab-workshops/BSC6926-B52_Fall2025/blob/main/workshopScripts/workshop9.R)
 
 [R script of workshop 9](workshopScripts/workshop9.R)
 
