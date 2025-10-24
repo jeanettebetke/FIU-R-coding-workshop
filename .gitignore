@@ -6,6 +6,8 @@
 .RData
 .RDataTmp
 
+data/LDWF_trawl_gillnet*
+
 # User-specific files
 .Ruserdata
 
