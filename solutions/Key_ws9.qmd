@@ -1,0 +1,138 @@
+---
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: yeti
+---
+## Key for workshop 8 exercises
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = T, cache = T)
+```
+
+
+## Exercises
+For these exercises use the [LDWF Calcasieu seine sampling dataset](https://github.com/SeascapeEcologyLab-workshops/BSC6926-B52_Fall2025/blob/main/data/Calcasieu.csv). 
+
+1. Using the Calcasieu dataset plot the community trajectory for each site.
+```{r}
+library(tidyverse)
+library(ecotraj)
+library(vegan)
+
+df = read_csv('data/Calcasieu.csv') |> 
+  mutate(month = month(date)) 
+
+#community matrix 
+comm_matrix = df |> select(-basin, -site, -date, -month)
+
+# site data
+site = df$site
+
+# survey 
+survey = df$month
+
+# create bray curtis dissimilarity matrix
+b_dist = vegdist(comm_matrix, method = "bray")
+
+# define trajectory
+d = defineTrajectories(b_dist, sites = site, surveys =survey)
+
+# can be done with other ways
+nmds = metaMDS(comm_matrix, distance = "bray", k = 2, try = 100)
+
+
+# convert nMDS to tibble
+df_nmds = tibble(site = as.factor(site), 
+                 month = survey, 
+                 data.frame(nmds[["points"]])) |> 
+      # add end points of each segment for arrow
+      group_by(site) |> 
+      mutate(xend = lead(MDS1), yend = lead(MDS2))
+
+library(viridis)
+library(ggrepel)
+
+# plot 
+ggplot(df_nmds, aes(MDS1, MDS2))+
+      geom_segment(aes(xend = xend, yend = yend, color = site),
+                   linewidth = 1,
+                   arrow = arrow(length = unit(0.25, "cm")))+
+      ggrepel::geom_text_repel(aes(label=month))+
+      facet_wrap(~site)+
+      labs(x = 'NMDS1', y = 'NMDS2',
+           color = 'Site')+
+      scale_color_viridis_d()+
+      theme_bw()+
+      theme(legend.position = 'none')
+
+```
+
+
+2. Calculate the total path length at each site.
+```{r}
+trajectoryLengths(d)
+
+tl = trajectoryLengths(d) |> 
+      rownames_to_column(var = 'site') |> 
+      as_tibble()
+
+# total trajectory length 
+ggplot(tl, aes(site, Path, fill = site))+
+      geom_col()+
+      labs(x = 'site', y = 'Trajectory total distance')+
+      scale_fill_viridis_d()+
+      theme_bw()+
+      theme(legend.position = 'none')
+```
+
+
+3. Plot the speed of change at each site.
+```{r}
+# segment length 
+tll = tl |> 
+      pivot_longer(S1:S11, names_to = 'seg', values_to = 'len') |> 
+      mutate(seg = factor(seg, levels = c('S1', 'S2','S3', 'S4',
+                                          'S5', 'S6','S7', 'S8',
+                                          'S9', 'S10','S11')))
+
+
+# plot 
+ggplot(tll, aes(seg, len, group = site, color = site))+
+      geom_point(size = 2.5)+
+      geom_line(linewidth = 1)+
+      labs(x = 'Segment', y = 'Speed of change')+
+      scale_x_discrete(labels =c('Jan-Feb', 'Feb-Mar', 'Mar-Apr',
+                      'Apr-May', 'May-Jun', 'Jun-Jul',
+                      'Jul-Aug', 'Aug-Sep', 'Sep-Oct',
+                      'Oct-Nov', 'Nov-Dec'))+
+      scale_color_viridis_d()+
+      theme_bw()+
+      theme(legend.position = 'none',
+            axis.text.x = element_text(angle = 90))
+
+```
+
+
+4. Plot the cumulative length at each time step for each site.
+```{r}
+tll = tll |> 
+      group_by(site) |> 
+      mutate(dist_cuml = cumsum(len))
+
+
+ggplot(tll, aes(seg, dist_cuml, group = site, color = site))+
+            geom_point(size = 2.5)+
+      geom_line(linewidth = 1)+
+      labs(x = 'Month', y = 'Total segment length')+
+      scale_x_discrete(labels =c('Feb', 'Mar', 'Apr',
+                      'May', 'Jun', 'Jul',
+                      'Aug', 'Sep', 'Oct',
+                      'Nov', 'Dec'))+
+      scale_color_viridis_d()+
+      theme_bw()+
+      theme(legend.position = 'right')
+```
+
+
+

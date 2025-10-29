@@ -32,6 +32,8 @@ website:
     right:
     - text: 'HW'
       href: HW.qmd
+    - text: 'Project'
+      href: project.qmd
 
 format:
   html:

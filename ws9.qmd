@@ -246,4 +246,4 @@ For these exercises use the [LDWF Calcasieu seine sampling dataset](https://gith
 
 4. Plot the cumulative length at each time step for each site.
 
-[Exercise Solutions](solutions/Key_ws8.html)\
+[Exercise Solutions](solutions/Key_ws9.html)\
